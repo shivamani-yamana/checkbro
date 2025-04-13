@@ -1,7 +1,7 @@
 // In Button.tsx
 interface ButtonProps {
   onClick: () => void;
-  color: "green" | "blue" | "rose" | "gray";
+  color: "green" | "blue" | "rose" | "gray" | "red" | "yellow";
   children: React.ReactNode;
   disabled?: boolean;
   className?: string;
@@ -19,6 +19,8 @@ function Button({
     blue: "bg-blue-600 hover:bg-blue-700 active:bg-blue-800",
     rose: "bg-rose-600 hover:bg-rose-700 active:bg-rose-800",
     gray: "bg-gray-600 hover:bg-gray-700 active:bg-gray-800",
+    red: "bg-red-600 hover:bg-red-700 active:bg-red-800",
+    yellow: "bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800",
   };
 
   return (

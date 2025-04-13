@@ -1,7 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UPDATE_BOARD = exports.GAME_OVER = exports.MOVE = exports.INIT_GAME = void 0;
+exports.PONG = exports.PING = exports.CONNECTION_ESTABLISHED = exports.DRAW_DECLINED = exports.DRAW_ACCEPTED = exports.DRAW_OFFER = exports.OFFER_DRAW = exports.RESIGN = exports.UPDATE_BOARD = exports.GAME_OVER = exports.MOVE = exports.OPPONENT_DISCONNECTED = exports.INIT_GAME = void 0;
 exports.INIT_GAME = "init_game";
+exports.OPPONENT_DISCONNECTED = "opponent_disconnected";
 exports.MOVE = "move";
 exports.GAME_OVER = "game_over";
 exports.UPDATE_BOARD = "update_board";
+exports.RESIGN = "resign";
+exports.OFFER_DRAW = "offer_draw";
+exports.DRAW_OFFER = "draw_offer";
+exports.DRAW_ACCEPTED = "draw_accepted";
+exports.DRAW_DECLINED = "draw_declined";
+exports.CONNECTION_ESTABLISHED = "connection_established";
+exports.PING = "ping";
+exports.PONG = "pong";

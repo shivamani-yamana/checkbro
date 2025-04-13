@@ -7,6 +7,7 @@ export class Game {
   player2: WebSocket;
   private board: Chess;
   private startDate: Date;
+  isGameOver: boolean = false;
 
   constructor(player1: WebSocket, player2: WebSocket) {
     this.player1 = player1;
@@ -53,19 +54,41 @@ export class Game {
 
     if (this.board.isGameOver()) {
       let winner: string = "";
-      if (this.board.isCheckmate()) {
+      let winType: string = "";
+      if (this.board.isStalemate()) {
+        winner = "draw";
+        winType = "stalemate";
+      } else if (this.board.isInsufficientMaterial()) {
+        winner = "draw";
+        winType = "insufficient_material";
+      } else if (this.board.isThreefoldRepetition()) {
+        winner = "draw";
+        winType = "threefold_repitition";
+      } else if (this.board.isDrawByFiftyMoves()) {
+        winner = "draw";
+        winType = "fifty_moves";
+      } else if (this.board.isDraw()) {
+        winner = "draw";
+        winType = "draw";
+      } else if (this.board.isCheckmate()) {
         winner = this.board.turn() === "w" ? "black" : "white";
+        winType = "checkmate";
+      } else if (this.board.isCheck()) {
+        console.log("Check", this.board.ascii());
       }
 
       const gameOverMessage = JSON.stringify({
         type: GAME_OVER,
         payload: {
           winner: winner,
+          winType: winType,
         },
       });
       this.player1.send(gameOverMessage);
       this.player2.send(gameOverMessage);
       console.log("Game Over", winner);
+
+      this.isGameOver = true;
     }
 
     const moveMessage = JSON.stringify({
@@ -81,8 +104,8 @@ export class Game {
 
     this.player1.send(moveMessage);
     this.player2.send(moveMessage);
-    console.log("Move made", move);
-    console.log("Current board state", this.board.ascii());
-    console.log("Current turn", this.board.turn());
+    // console.log("Move made", move);
+    // console.log("Current board state", this.board.ascii());
+    // console.log("Current turn", this.board.turn());
   }
 }

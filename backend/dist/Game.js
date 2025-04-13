@@ -5,6 +5,7 @@ const chess_js_1 = require("chess.js");
 const messages_1 = require("./messages");
 class Game {
     constructor(player1, player2) {
+        this.isGameOver = false;
         this.player1 = player1;
         this.player2 = player2;
         this.board = new chess_js_1.Chess();
@@ -40,18 +41,45 @@ class Game {
         }
         if (this.board.isGameOver()) {
             let winner = "";
-            if (this.board.isCheckmate()) {
+            let winType = "";
+            if (this.board.isStalemate()) {
+                winner = "draw";
+                winType = "stalemate";
+            }
+            else if (this.board.isInsufficientMaterial()) {
+                winner = "draw";
+                winType = "insufficient_material";
+            }
+            else if (this.board.isThreefoldRepetition()) {
+                winner = "draw";
+                winType = "threefold_repitition";
+            }
+            else if (this.board.isDrawByFiftyMoves()) {
+                winner = "draw";
+                winType = "fifty_moves";
+            }
+            else if (this.board.isDraw()) {
+                winner = "draw";
+                winType = "draw";
+            }
+            else if (this.board.isCheckmate()) {
                 winner = this.board.turn() === "w" ? "black" : "white";
+                winType = "checkmate";
+            }
+            else if (this.board.isCheck()) {
+                console.log("Check", this.board.ascii());
             }
             const gameOverMessage = JSON.stringify({
                 type: messages_1.GAME_OVER,
                 payload: {
                     winner: winner,
+                    winType: winType,
                 },
             });
             this.player1.send(gameOverMessage);
             this.player2.send(gameOverMessage);
             console.log("Game Over", winner);
+            this.isGameOver = true;
         }
         const moveMessage = JSON.stringify({
             type: messages_1.UPDATE_BOARD,
@@ -65,9 +93,9 @@ class Game {
         // Send the move to both players
         this.player1.send(moveMessage);
         this.player2.send(moveMessage);
-        console.log("Move made", move);
-        console.log("Current board state", this.board.ascii());
-        console.log("Current turn", this.board.turn());
+        // console.log("Move made", move);
+        // console.log("Current board state", this.board.ascii());
+        // console.log("Current turn", this.board.turn());
     }
 }
 exports.Game = Game;
