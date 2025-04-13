@@ -1,6 +1,6 @@
 # Check Bro - Real-time Chess Application
 
-![Chess Game](./public/chess_img.jpg)
+![Chess Game](./frontend/public/chess_img.jpg)
 
 ## Project Overview
 
