@@ -4,7 +4,7 @@
 
 ## Project Overview
 
-Check Bro is a modern real-time chess application that allows players to compete against each other online. This project demonstrates the use of WebSocket technology for real-time game updates and a responsive user interface built with modern React.
+Checkbro is a modern real-time chess application that allows players to compete against each other online. This project demonstrates the use of WebSocket technology for real-time game updates and a responsive user interface built with modern React.
 
 ## Features
 

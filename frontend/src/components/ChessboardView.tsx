@@ -784,7 +784,7 @@ const ChessboardView = React.memo(function ChessboardView({
 
         <div className="absolute inset-0 bg-gray-800/80 flex items-center justify-center">
           <div className="text-center p-6 flex flex-col justify-center items-center">
-            <h2 className="text-3xl font-bold mb-6">Check Bro</h2>
+            <h2 className="text-3xl font-bold mb-6">Checkbro</h2>
             <p className="text-gray-300 mb-8">
               Challenge another player to a game of chess
             </p>
