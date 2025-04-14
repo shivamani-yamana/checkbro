@@ -8,7 +8,11 @@ import {
 } from "react";
 
 import { useSocket } from "../hooks/useSocket";
-import { GameContextType, ChessMovesHistoryType } from "@/types/Types";
+import {
+  GameContextType,
+  ChessMovesHistoryType,
+  CapturedPiece,
+} from "@/types/Types";
 import {
   DRAW_ACCEPTED,
   DRAW_DECLINED,
@@ -59,8 +63,82 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     null
   );
   const [opponentName, setOpponentName] = useState<string | null>(null);
+  const [moveError, setMoveError] = useState<string | null>(null);
+
+  const [capturedPieces, setCapturedPieces] = useState<{
+    byPlayer: CapturedPiece[];
+    byOpponent: CapturedPiece[];
+  }>({
+    byPlayer: [],
+    byOpponent: [],
+  });
 
   const { playerName } = usePlayerContext();
+
+  useEffect(() => {
+    if (gameState === "playing" && chess && moveHistory.length > 0) {
+      // Determine player colors
+      const playerColorCode = playerColor === "white" ? "w" : "b";
+
+      // Track captures by player and opponent
+      const capturedByPlayer: Record<string, number> = {
+        p: 0,
+        n: 0,
+        b: 0,
+        r: 0,
+        q: 0,
+        k: 0,
+      };
+      const capturedByOpponent: Record<string, number> = {
+        p: 0,
+        n: 0,
+        b: 0,
+        r: 0,
+        q: 0,
+        k: 0,
+      };
+
+      // Process each move in history
+      moveHistory.forEach((move) => {
+        // If this move was a capture
+        if (move.flags.includes("c") && (move as any).captured) {
+          // Check if the capturing player was the player or opponent
+          if (move.color === playerColorCode) {
+            capturedByPlayer[(move as any).captured]++;
+          } else {
+            capturedByOpponent[(move as any).captured]++;
+          }
+        }
+      });
+
+      // Convert to array format
+      const playerCaptures: CapturedPiece[] = [];
+      const opponentCaptures: CapturedPiece[] = [];
+
+      Object.entries(capturedByPlayer).forEach(([type, count]) => {
+        if (type !== "k" && count > 0) {
+          playerCaptures.push({ type, count });
+        }
+      });
+
+      Object.entries(capturedByOpponent).forEach(([type, count]) => {
+        if (type !== "k" && count > 0) {
+          opponentCaptures.push({ type, count });
+        }
+      });
+
+      setCapturedPieces({
+        byPlayer: playerCaptures,
+        byOpponent: opponentCaptures,
+      });
+    } else if (gameState === "waiting") {
+      // Reset captured pieces when game resets
+      setCapturedPieces({
+        byPlayer: [],
+        byOpponent: [],
+      });
+    }
+  }, [moveHistory, playerColor, gameState]);
 
   const startGame = useCallback(() => {
     // console.log("Start game function called at GameContext");
@@ -89,16 +167,31 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [socket]);
 
   const makeMove = useCallback(
-    (move: { from: string; to: string }) => {
+    (move: { from: string; to: string; promotion?: string }) => {
       if (socket && gameState === "playing") {
         console.log("Sending move to server", move);
+
+        // OPTIMISTIC UPDATE: Apply move locally first for instant feedback
+        try {
+          const newChess = new Chess(chess.fen());
+          const result = newChess.move(move);
+
+          if (result) {
+            // Update local state immediately
+            setChess(newChess);
+            setCurrentTurn(newChess.turn() === "w" ? "white" : "black");
+          }
+        } catch (error) {
+          console.error("Invalid move", error);
+        }
+
+        // Then send to server
         socket.send(
           JSON.stringify({
             type: MOVE,
             move: move,
           })
         );
-        // setCurrentTurn(chess.turn() === "w" ? "white" : "black");
       }
     },
     [socket, gameState, chess]
@@ -264,6 +357,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     currentTurn,
     winner,
     moveHistory,
+    moveError,
+    setMoveError,
     startGame,
     makeMove,
     resign,
@@ -271,6 +366,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     acceptDraw,
     declineDraw,
     drawOfferedBy,
+    capturedPieces,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
