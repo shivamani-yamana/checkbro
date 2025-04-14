@@ -9,7 +9,12 @@ export const useSocket = () => {
 
   useEffect(() => {
     // Create WebSocket connection
-    const ws = new WebSocket("ws://localhost:8080");
+    // const ws = new WebSocket("wss://checkbro.onrender.com");
+    // For Vite, we use import.meta.env instead of process.env
+    const socketUrl =
+      import.meta.env.VITE_WEBSOCKET_URL || "ws://localhost:8000";
+    const ws = new WebSocket(socketUrl);
+
     socketRef.current = ws;
 
     // Connection opened

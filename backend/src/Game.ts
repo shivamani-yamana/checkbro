@@ -34,7 +34,10 @@ export class Game {
     );
   }
 
-  makeMove(socket: WebSocket, move: { from: string; to: string }) {
+  makeMove(
+    socket: WebSocket,
+    move: { from: string; to: string; promotion?: string | undefined }
+  ) {
     const curSize = this.board.history().length % 2;
     // Validate whose move
     if (
