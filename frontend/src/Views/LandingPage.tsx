@@ -1,3 +1,4 @@
+// Updated LandingPage.tsx content
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -68,16 +69,16 @@ const LandingPage = () => {
                 Features
               </a>
               <a
-                href="#how-it-works"
+                href="#development"
                 className="px-3 py-2 text-sm text-gray-300 hover:text-white transition-colors"
               >
-                How It Works
+                Development Status
               </a>
               <button
                 onClick={() => navigate("/game")}
                 className="ml-4 px-4 py-2 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-sm font-medium transition-all hover:shadow-lg"
               >
-                Play Now
+                Try Demo
               </button>
             </div>
           </div>
@@ -101,15 +102,16 @@ const LandingPage = () => {
                   Play chess{" "}
                   <span className="relative">
                     <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                      anytime, anywhere
+                      in development
                     </span>
                     <span className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></span>
                   </span>
                 </h1>
 
                 <p className="text-lg text-gray-300 max-w-lg">
-                  Challenge players worldwide, improve your skills, and become a
-                  chess master on our modern platform.
+                  Checkbro is currently in early development. Try our prototype
+                  with basic 1v1 gameplay, captured piece tracking, and game
+                  controls.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -117,36 +119,22 @@ const LandingPage = () => {
                     className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 px-8 py-4 rounded-lg text-lg font-medium transition-all hover:shadow-lg hover:shadow-blue-600/20"
                     onClick={() => navigate("/game")}
                   >
-                    Play Now
+                    Try Demo
                   </button>
-                  <button
-                    className="bg-gray-800 hover:bg-gray-700 px-8 py-4 rounded-lg text-lg font-medium transition-colors"
-                    onClick={() => navigate("/learn")}
+                  <a
+                    href="#development"
+                    className="bg-gray-800 hover:bg-gray-700 px-8 py-4 rounded-lg text-lg font-medium transition-colors text-center"
                   >
-                    Learn Chess
-                  </button>
+                    Development Status
+                  </a>
                 </div>
 
-                {/* Stats */}
-                <div className="flex flex-wrap gap-8 pt-4">
-                  <div>
-                    <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-                      5M+
-                    </div>
-                    <div className="text-sm text-gray-400">Players</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-                      10M+
-                    </div>
-                    <div className="text-sm text-gray-400">Games Played</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      150+
-                    </div>
-                    <div className="text-sm text-gray-400">Countries</div>
-                  </div>
+                {/* Development badge */}
+                <div className="inline-flex items-center gap-2 bg-blue-900/30 border border-blue-500/30 px-4 py-2 rounded-lg">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-blue-300">
+                    In Active Development
+                  </span>
                 </div>
               </div>
 
@@ -176,16 +164,16 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* Features Section */}
+        {/* Features Section - Only showing implemented features */}
         <section id="features" className="py-16 md:py-24 bg-gray-800/50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Why play chess with us?
+                Current Features
               </h2>
               <p className="text-gray-400 max-w-2xl mx-auto">
-                Our platform offers a modern chess experience with features
-                designed for both beginners and masters.
+                Our platform is under development, but you can already try these
+                working features:
               </p>
             </div>
 
@@ -208,10 +196,11 @@ const LandingPage = () => {
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Quick Match</h3>
+                <h3 className="text-xl font-semibold mb-2">Real-time Chess</h3>
                 <p className="text-gray-400">
-                  Jump into a game instantly with players of similar skill
-                  level. No waiting, just chess.
+                  Play a complete game of chess against the next person who
+                  joins. Full chess rules including castling, en passant, and
+                  promotions.
                 </p>
               </div>
 
@@ -229,14 +218,16 @@ const LandingPage = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Custom Games</h3>
+                <h3 className="text-xl font-semibold mb-2">
+                  Captured Pieces Tracking
+                </h3>
                 <p className="text-gray-400">
-                  Set your own time controls and challenge specific players to
-                  personalized matches.
+                  See which pieces you've captured and their material value.
+                  Keep track of the material advantage in real time.
                 </p>
               </div>
 
@@ -254,90 +245,251 @@ const LandingPage = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Real-time Chat</h3>
-                <p className="text-gray-400">
-                  Communicate with your opponent during matches with our
-                  integrated chat feature.
-                </p>
-              </div>
-
-              {/* Feature 4 */}
-              <div className="p-6 rounded-xl bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm transition-all hover:shadow-lg hover:-translate-y-1 border border-gray-700/50">
-                <div className="w-12 h-12 mb-4 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Analytics</h3>
-                <p className="text-gray-400">
-                  Track your progress with detailed game statistics and
-                  performance analysis.
-                </p>
-              </div>
-
-              {/* Feature 5 */}
-              <div className="p-6 rounded-xl bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm transition-all hover:shadow-lg hover:-translate-y-1 border border-gray-700/50">
-                <div className="w-12 h-12 mb-4 rounded-lg bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Learn & Improve</h3>
-                <p className="text-gray-400">
-                  Access tutorials, puzzles, and analysis tools to enhance your
-                  chess skills.
-                </p>
-              </div>
-
-              {/* Feature 6 */}
-              <div className="p-6 rounded-xl bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-sm transition-all hover:shadow-lg hover:-translate-y-1 border border-gray-700/50">
-                <div className="w-12 h-12 mb-4 rounded-lg bg-gradient-to-br from-blue-600 to-purple-500 flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
                       d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Secure Platform</h3>
+                <h3 className="text-xl font-semibold mb-2">Game Controls</h3>
                 <p className="text-gray-400">
-                  Play with confidence on our secure, cheat-protected
-                  environment with fair play monitoring.
+                  Resign from the game or offer a draw to your opponent. Full
+                  move history panel to keep track of all moves.
                 </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Development Status Section */}
+        <section id="development" className="py-16 md:py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Development Status
+              </h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                Checkbro is an early-stage project. Here's our current status
+                and what's coming next.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+              <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+                <div className="flex items-center mb-4">
+                  <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                  <h3 className="text-xl font-bold">Completed</h3>
+                </div>
+                <ul className="space-y-2 text-gray-300">
+                  <li className="flex items-start">
+                    <svg
+                      className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Basic matchmaking system
+                  </li>
+                  <li className="flex items-start">
+                    <svg
+                      className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Complete chess rules implementation
+                  </li>
+                  <li className="flex items-start">
+                    <svg
+                      className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Captured pieces tracking
+                  </li>
+                  <li className="flex items-start">
+                    <svg
+                      className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Move history panel
+                  </li>
+                  <li className="flex items-start">
+                    <svg
+                      className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Resign & draw offers
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+                <div className="flex items-center mb-4">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                  <h3 className="text-xl font-bold">In Progress</h3>
+                </div>
+                <ul className="space-y-2 text-gray-300">
+                  <li className="flex items-start">
+                    <svg
+                      className="h-5 w-5 text-yellow-500 mr-2 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    Game clock implementation
+                  </li>
+                  <li className="flex items-start">
+                    <svg
+                      className="h-5 w-5 text-yellow-500 mr-2 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    UI/UX improvements
+                  </li>
+                  <li className="flex items-start">
+                    <svg
+                      className="h-5 w-5 text-yellow-500 mr-2 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    Improved user profiles
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+                <div className="flex items-center mb-4">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                  <h3 className="text-xl font-bold">Coming Soon</h3>
+                </div>
+                <ul className="space-y-2 text-gray-300">
+                  <li className="flex items-start">
+                    <svg
+                      className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                      />
+                    </svg>
+                    Matchmaking and rating system
+                  </li>
+                  <li className="flex items-start">
+                    <svg
+                      className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                      />
+                    </svg>
+                    In-game chat functionality
+                  </li>
+                  <li className="flex items-start">
+                    <svg
+                      className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                      />
+                    </svg>
+                    Game analysis tools
+                  </li>
+                  <li className="flex items-start">
+                    <svg
+                      className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                      />
+                    </svg>
+                    Mobile optimization
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
@@ -356,18 +508,18 @@ const LandingPage = () => {
               <div className="relative p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold mb-2">
-                    Ready for your next move?
+                    Want to try the prototype?
                   </h2>
                   <p className="text-blue-100 mb-0 md:max-w-lg">
-                    Join thousands of players and start your chess journey
-                    today. No registration required to play your first game!
+                    You'll need two browser windows to play against yourself
+                    during development, or try to match with another tester!
                   </p>
                 </div>
                 <button
                   className="px-8 py-4 rounded-lg bg-white text-blue-600 hover:bg-blue-50 font-medium text-lg whitespace-nowrap transition-all hover:shadow-lg"
                   onClick={() => navigate("/game")}
                 >
-                  Play Now
+                  Try Demo
                 </button>
               </div>
             </div>
@@ -377,120 +529,17 @@ const LandingPage = () => {
 
       <footer className="bg-gray-900 border-t border-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="md:col-span-2">
-              <div className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent mb-4">
-                Checkbro
-              </div>
-              <p className="text-gray-400 max-w-sm">
-                Modern chess platform for players of all skill levels. Play,
-                learn, and improve your chess game.
-              </p>
-              <div className="flex space-x-4 mt-6">
-                <a
-                  href="#"
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  <span className="sr-only">Twitter</span>
-                  <svg
-                    className="h-6 w-6"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
-                  </svg>
-                </a>
-                <a
-                  href="#"
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  <span className="sr-only">GitHub</span>
-                  <svg
-                    className="h-6 w-6"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </a>
-              </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent mb-4">
+              Checkbro
             </div>
-
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Home
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#features"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Features
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Learn Chess
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Community
-                  </a>
-                </li>
-              </ul>
+            <p className="text-gray-400 max-w-lg mx-auto">
+              This is a development prototype. Not all features are implemented
+              yet.
+            </p>
+            <div className="mt-4 text-sm text-gray-500">
+              &copy; 2025 Checkbro. All rights reserved.
             </div>
-
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Privacy Policy
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Terms of Service
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Cookie Policy
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="mt-12 pt-8 border-t border-gray-800 text-center text-gray-400 text-sm">
-            <p>&copy; 2025 Checkbro. All rights reserved.</p>
           </div>
         </div>
       </footer>
