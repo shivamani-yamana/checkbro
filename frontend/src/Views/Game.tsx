@@ -5,6 +5,9 @@ import { GameProvider } from "../contexts/GameContext";
 import { PlayerProvider } from "@/contexts/PlayerContext";
 import GameNavbar from "@/components/GameNavbar";
 import { useState } from "react";
+import { ReconnectionStatus } from "@/components/ReconnectionStatus";
+import OpponentDisconnnectAlert from "@/components/OpponentDisconnnectAlert";
+import OfflineBanner from "@/components/OfflineBanner";
 
 // Create a component inside Game that has access to contexts
 const GameContent = () => {
@@ -14,6 +17,23 @@ const GameContent = () => {
   return (
     <div className="h-screen bg-gray-900 text-white flex flex-col overflow-hidden">
       <GameNavbar />
+
+      <OfflineBanner />
+
+      {/* Notification container - positioned absolutely */}
+      <div className="fixed inset-0 pointer-events-none z-50">
+        {/* ReconnectionStatus is centered */}
+        <div className="h-full flex items-center justify-center pointer-events-none">
+          <div className="pointer-events-auto">
+            <ReconnectionStatus />
+          </div>
+        </div>
+
+        {/* OpponentDisconnectAlert goes in top-right */}
+        <div className="absolute top-4 right-4 pointer-events-auto">
+          <OpponentDisconnnectAlert />
+        </div>
+      </div>
 
       {/* Main content - chess.com inspired responsive layout */}
       <main className="flex-1 flex flex-col md:grid md:grid-cols-8 md:gap-4">

@@ -89,6 +89,7 @@ const ChessboardView = React.memo(function ChessboardView({
     chess,
     playerColor,
     winner,
+    isOnline,
     makeMove,
     startGame,
     acceptDraw,
@@ -96,6 +97,7 @@ const ChessboardView = React.memo(function ChessboardView({
     drawOfferedBy,
     moveError,
     setMoveError,
+    lastMove, // Get lastMove directly from context
   } = useGameContext();
 
   const { playerName, declarePlayerName } = usePlayerContext();
@@ -104,179 +106,7 @@ const ChessboardView = React.memo(function ChessboardView({
   const lastMoveTime = useRef(Date.now());
   const moveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const renderCount = useRef(0);
-  // Add this state to track last move
-  const [, setMoveHistory] = useState<Array<{ from: string; to: string }>>([]);
 
-  const previousFenRef = useRef<string | null>(null);
-
-  const [lastMoveKey, setLastMoveKey] = useState(0);
-
-  // Update when lastMoveRef changes
-
-  // Add a ref to track the last move for highlighting
-  const lastMoveRef = useRef<{ from: string; to: string } | null>(null);
-
-  useEffect(() => {
-    if (lastMoveRef.current) {
-      setLastMoveKey((prevKey) => prevKey + 1);
-    }
-  }, [lastMoveRef.current?.from, lastMoveRef.current?.to]);
-  // Listen for board changes that might be from opponent moves
-  // Update the effect that detects opponent moves:
-  // Update the logic for handling captures in your board comparison code
-  useEffect(() => {
-    const currentFen = chess.fen();
-
-    // Skip if this is the initial render or same position
-    if (!previousFenRef.current || previousFenRef.current === currentFen) {
-      previousFenRef.current = currentFen;
-      return;
-    }
-
-    // Rate limit the FEN comparison
-    if (Date.now() - lastMoveTime.current < 100) {
-      previousFenRef.current = currentFen;
-      return;
-    }
-
-    if (previousFenRef.current && previousFenRef.current !== currentFen) {
-      try {
-        // Try to get the last move from chess history
-        const history = chess.history({ verbose: true });
-        if (history.length > 0) {
-          const lastHistoryMove = history[history.length - 1];
-
-          // Update lastMoveRef with the actual move from chess history
-          lastMoveRef.current = {
-            from: lastHistoryMove.from,
-            to: lastHistoryMove.to,
-          };
-
-          console.log("Detected move from history:", lastMoveRef.current);
-        } else {
-          const prevChess = new Chess(previousFenRef.current);
-          const prevBoard = prevChess.board();
-          const currentBoard = chess.board();
-
-          // Find changes between boards
-          let fromSquare: string | null = null;
-          let toSquare: string | null = null;
-
-          // Simple heuristic: track piece removals and additions
-          const removals: string[] = [];
-          const additions: string[] = [];
-
-          for (let i = 0; i < 8; i++) {
-            for (let j = 0; j < 8; j++) {
-              const file = "abcdefgh"[j];
-              const rank = 8 - i;
-              const square = `${file}${rank}`;
-
-              const prevPiece = prevBoard[i][j];
-              const currPiece = currentBoard[i][j];
-
-              if (prevPiece && !currPiece) {
-                // Piece was removed from this square
-                removals.push(square);
-              } else if (!prevPiece && currPiece) {
-                // Piece was added to this square
-                additions.push(square);
-              } else if (
-                prevPiece &&
-                currPiece &&
-                (prevPiece.type !== currPiece.type ||
-                  prevPiece.color !== currPiece.color)
-              ) {
-                // A piece was captured and replaced by another piece
-                removals.push(square); // Add the capture square to removals
-                additions.push(square); // And also to additions
-              }
-            }
-          }
-
-          // Handle capture moves: we need to determine which removed piece was the one that moved
-          if (removals.length === 2 && additions.length === 1) {
-            // This is likely a capture - figure out which removal is the "from" square
-            // We need to determine which piece was moved vs which was captured
-
-            const addedPiece = getSquarePiece(currentBoard, additions[0]);
-
-            // Find which of the removed pieces matches the color of the added piece
-            for (const removal of removals) {
-              const removedPiece = getSquarePiece(prevBoard, removal);
-              if (
-                removedPiece &&
-                addedPiece &&
-                removedPiece.color === addedPiece.color
-              ) {
-                // This must be our "from" square
-                fromSquare = removal;
-                toSquare = additions[0];
-                break;
-              }
-            }
-
-            if (fromSquare && toSquare) {
-              // Update lastMoveRef
-              lastMoveRef.current = { from: fromSquare, to: toSquare };
-              console.log("Detected capture move:", lastMoveRef.current);
-            }
-          }
-          // Standard move (no capture)
-          else if (removals.length === 1 && additions.length === 1) {
-            fromSquare = removals[0];
-            toSquare = additions[0];
-
-            // Update lastMoveRef
-            lastMoveRef.current = { from: fromSquare, to: toSquare };
-            console.log("Detected regular move:", lastMoveRef.current);
-          }
-        }
-      } catch (error) {
-        console.error("Error detecting move:", error);
-      }
-    }
-
-    // Update the previous FEN
-    previousFenRef.current = currentFen;
-  }, [chess.fen()]);
-
-  // Helper function to get a piece from a square using notation like "e4"
-  function getSquarePiece(board: any[][], squareNotation: string) {
-    const file = squareNotation.charCodeAt(0) - "a".charCodeAt(0);
-    const rank = 8 - parseInt(squareNotation[1]);
-    if (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
-      return board[rank][file];
-    }
-    return null;
-  }
-
-  // Update the effect that handles move history
-  useEffect(() => {
-    const history = chess.history({ verbose: true });
-    console.log("Chess history updated:", history);
-
-    if (history.length > 0) {
-      const formattedHistory = history.map((move) => ({
-        from: move.from,
-        to: move.to,
-      }));
-      setMoveHistory(formattedHistory);
-
-      // Update the lastMoveRef with the most recent move
-      if (formattedHistory.length > 0) {
-        lastMoveRef.current = formattedHistory[formattedHistory.length - 1];
-        console.log("Last move updated:", lastMoveRef.current);
-      }
-    } else {
-      // Don't clear the last move when history resets
-      // This preserves highlighting across board updates
-      console.log("Keeping previous last move:", lastMoveRef.current);
-      setMoveHistory([]);
-    }
-  }, [chess]);
-
-  // Create custom square styles for highlighting
   // Create custom square styles for highlighting
   const customSquareStyles = useMemo(() => {
     // Use a plain JavaScript object
@@ -309,42 +139,35 @@ const ChessboardView = React.memo(function ChessboardView({
         }
       }
 
-      // Only highlight the last move (most recent)
-      if (lastMoveRef.current) {
-        const lastMove = lastMoveRef.current;
+      // Only apply last move highlighting if we have a valid move from context
+      if (
+        lastMove &&
+        typeof lastMove.from === "string" &&
+        typeof lastMove.to === "string"
+      ) {
+        const { from, to } = lastMove;
 
-        // Only apply if the squares are valid
-        if (
-          typeof lastMove.from === "string" &&
-          typeof lastMove.to === "string"
-        ) {
-          // Apply highlighting for last move - no need for transformation
-          // The chess library and react-chessboard handle the coordinate system automatically
-          styles[lastMove.from] = {
-            ...styles[lastMove.from],
-            backgroundColor:
-              styles[lastMove.from]?.backgroundColor ||
-              "rgba(255, 255, 0, 0.4)",
-          };
+        // Apply a softer highlight color for better visual aesthetics
+        styles[from] = {
+          ...styles[from],
+          backgroundColor: "rgba(194, 180, 80, 0.35)", // Softer gold/tan color
+          boxShadow: "inset 0 0 0 2px rgba(194, 180, 80, 0.7)", // Matching border
+        };
 
-          styles[lastMove.to] = {
-            ...styles[lastMove.to],
-            backgroundColor:
-              styles[lastMove.to]?.backgroundColor || "rgba(255, 255, 0, 0.4)",
-          };
+        styles[to] = {
+          ...styles[to],
+          backgroundColor: "rgba(194, 180, 80, 0.35)", // Softer gold/tan color
+          boxShadow: "inset 0 0 0 2px rgba(194, 180, 80, 0.7)", // Matching border
+        };
 
-          // Debug info to check the actual move coordinates
-          console.log(
-            `Highlighting move: ${lastMove.from} → ${lastMove.to}, player: ${playerColor}`
-          );
-        }
+        console.log(`Highlighting move (from context): ${from} → ${to}`);
       }
     } catch (error) {
       console.error("Error generating square styles:", error);
     }
 
     return styles;
-  }, [chess, lastMoveKey, playerColor]); // Add playerColor as dependency
+  }, [chess, lastMove]); // Depend directly on chess and lastMove from context
 
   // Performance monitoring
   useEffect(() => {
@@ -511,6 +334,7 @@ const ChessboardView = React.memo(function ChessboardView({
   // Optimized drop handler with throttling to prevent rapid moves
   const onDrop = useCallback(
     (sourceSquare: string, targetSquare: string) => {
+      if (!isOnline) return false;
       // Throttle moves to prevent rapid clicking
       const now = Date.now();
       if (now - lastMoveTime.current < 200) {
@@ -544,7 +368,7 @@ const ChessboardView = React.memo(function ChessboardView({
 
         // Apply move with requestAnimationFrame to ensure smooth UI
         requestAnimationFrame(() => {
-          lastMoveRef.current = { from: sourceSquare, to: targetSquare };
+          // Don't update lastMoveRef manually anymore as it's handled by context
           makeMove({
             from: sourceSquare,
             to: targetSquare,
@@ -586,15 +410,24 @@ const ChessboardView = React.memo(function ChessboardView({
         return false;
       }
 
+      // Extract the promotion piece character (q, r, n, b) from the piece name (e.g., 'wQ' -> 'q')
       const promotionPiece = piece.charAt(1).toLowerCase();
+
+      console.log(
+        `Promotion move selected: ${fromSquare} to ${toSquare}, promoting to ${promotionPiece}`
+      );
+
+      // Create a properly formatted move object with the promotion piece
+      const moveWithPromotion = {
+        from: fromSquare,
+        to: toSquare,
+        promotion: promotionPiece,
+      };
 
       // Apply move with requestAnimationFrame to ensure smooth UI
       requestAnimationFrame(() => {
-        makeMove({
-          from: fromSquare,
-          to: toSquare,
-          promotion: promotionPiece,
-        });
+        // Send the move with the promotion piece to the server
+        makeMove(moveWithPromotion);
       });
 
       return true;
@@ -737,13 +570,12 @@ const ChessboardView = React.memo(function ChessboardView({
   }, [moveError]);
 
   // Optimized common board props
-  // Update the commonBoardProps object
-
   const commonBoardProps = useMemo(
     () => ({
       position: chessboardPosition,
       boardOrientation: playerColor as BoardOrientation,
       customSquareStyles,
+      // Remove key from commonBoardProps to avoid React warning
       customBoardStyle: {
         ...chessBoardStyles,
         willChange: "transform, opacity",
@@ -912,8 +744,6 @@ const ChessboardView = React.memo(function ChessboardView({
 
       {showProfileDialog && renderProfileDialog()}
       {errorMessage}
-      {/* Make settings button touch-friendly on mobile */}
-
       {renderDrawOfferDialog()}
     </div>
   );
