@@ -89,7 +89,7 @@ interface TokenPayload {
 export class GameManager {
   private JWT_SECRET: string | undefined;
   // Updated to 2 minutes (120 seconds)
-  private readonly RECONNECTION_TIMEOUT = 30 * 1000; // 2 minutes
+  private readonly RECONNECTION_TIMEOUT = 120 * 1000; // 2 minutes
 
   private games: Game[];
   private clients: ClientConnection[] = [];
