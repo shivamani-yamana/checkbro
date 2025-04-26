@@ -33,6 +33,31 @@ export interface GameContextType {
   moveHistory: ChessMovesHistoryType[];
   winner: string | null;
   moveError: string | null;
+  isConnecting: boolean;
+  isReconnecting: boolean;
+  opponentDisconnectTime: Number | null;
+  opponentTimeRemaining: number;
+  isOnline: boolean;
+  isOpponentDisconnected: boolean;
+  reconnectionWindowSeconds: number;
+  boardKey: number; // Add the boardKey property
+  setOpponentTimeRemaining: React.Dispatch<React.SetStateAction<number>>;
+  setGameState: React.Dispatch<
+    React.SetStateAction<
+      | "waiting"
+      | "playing"
+      | "over_checkmate"
+      | "over_stalemate"
+      | "over_resign"
+      | "over_draw"
+      | "over_opponent_disconnect"
+    >
+  >;
+  setIsOpponentDisconnected: React.Dispatch<React.SetStateAction<boolean>>;
+  // setOpponentDisconnectTime: React.Dispatch<
+  // React.SetStateAction<Number | null>
+  // >;
+  reconnect: () => void;
   setMoveError: (error: string | null) => void;
   startGame: () => void;
   makeMove: (move: { from: string; to: string; promotion?: string }) => void;
@@ -45,6 +70,7 @@ export interface GameContextType {
     byPlayer: CapturedPiece[];
     byOpponent: CapturedPiece[];
   };
+  lastMove: { from: string; to: string } | null;
   // Add any other properties that are in your value object
 }
 
