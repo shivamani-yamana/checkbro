@@ -50,11 +50,11 @@ else {
 class GameManager {
     constructor() {
         // Updated to 2 minutes (120 seconds)
-        this.RECONNECTION_TIMEOUT = 30 * 1000; // 2 minutes
+        this.RECONNECTION_TIMEOUT = 120 * 1000; // 2 minutes
         this.clients = [];
         this.disconnectedClients = new Map();
-        this.HEART_BEAT_INTERVAL = 5000; // 5 seconds
-        this.HEART_BEAT_TIMEOUT = 15000; //15 seconds
+        this.HEART_BEAT_INTERVAL = 30000; // 30 seconds
+        this.HEART_BEAT_TIMEOUT = 60000; //60 seconds
         this.JWT_SECRET = process.env.JWT_SECRET;
         if (!this.JWT_SECRET) {
             throw new Error("JWT_SECRET is not configured");
