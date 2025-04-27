@@ -97,8 +97,8 @@ export class GameManager {
   private pendingUserName: string | null;
   private disconnectedClients: Map<string, DisconnectedClient> = new Map();
 
-  private HEART_BEAT_INTERVAL = 5000; // 5 seconds
-  private HEART_BEAT_TIMEOUT = 15000; //15 seconds
+  private HEART_BEAT_INTERVAL = 30000; // 30 seconds
+  private HEART_BEAT_TIMEOUT = 60000; //60 seconds
 
   constructor() {
     this.JWT_SECRET = process.env.JWT_SECRET;
