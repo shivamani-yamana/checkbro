@@ -1,7 +1,19 @@
 {
   "rewrites": [
     {
-      "source": "/[^.]+",
+      "source": "/@vite/(.*)",
+      "destination": "/@vite/$1"
+    },
+    {
+      "source": "/@react-refresh",
+      "destination": "/@react-refresh"
+    },
+    {
+      "source": "/src/(.*)",
+      "destination": "/src/$1"
+    },
+    {
+      "source": "/(.*)",
       "destination": "/"
     }
   ],
