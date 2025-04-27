@@ -45,7 +45,22 @@ if (logLevel === "DEBUG") {
   Logger.setLogLevel(LogLevel.INFO);
 }
 
-const wss = new WebSocketServer({ port: 8080 });
+// Define allowed origins
+const allowedOrigins = ["http://localhost:3000", "https://checkbro.vercel.app"];
+
+const wss = new WebSocketServer({
+  port: 8080,
+  verifyClient: (info, done) => {
+    const origin = info.origin;
+    if (allowedOrigins.includes(origin)) {
+      Logger.info(`Connection from allowed origin: ${origin}`);
+      done(true); // Accept the connection
+    } else {
+      Logger.error(`Blocked connection from origin: ${origin}`);
+      done(false); // Reject the connection
+    }
+  },
+});
 const gameManager = new GameManager();
 
 wss.on("connection", (ws) => {

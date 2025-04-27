@@ -207,8 +207,7 @@ export const useSocket = (props: UseSocketProps = {}) => {
     }
 
     setIsConnecting(true);
-    const socketUrl =
-      import.meta.env.VITE_WEBSOCKET_URL || "ws://localhost:8080";
+    const socketUrl = import.meta.env.VITE_WEBSOCKET_URL;
     const ws = new WebSocket(socketUrl);
     if (isHostedEnvironment()) {
       ws.binaryType = "arraybuffer"; // Sometimes more reliable
