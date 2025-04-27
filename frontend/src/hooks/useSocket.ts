@@ -71,6 +71,13 @@ export const useSocket = (props: UseSocketProps = {}) => {
   const [hasReconnectionToken, setHasReconnectionToken] =
     useState<boolean>(false);
 
+  const isHostedEnvironment = () => {
+    return (
+      window.location.hostname !== "localhost" &&
+      window.location.hostname !== "127.0.0.1"
+    );
+  };
+
   // Track if a page just loaded/reloaded to prevent automatic token clearing
   const isInitialMount = useRef(true);
   // Track if this is a page reload
@@ -203,45 +210,52 @@ export const useSocket = (props: UseSocketProps = {}) => {
     const socketUrl =
       import.meta.env.VITE_WEBSOCKET_URL || "ws://localhost:8080";
     const ws = new WebSocket(socketUrl);
+    if (isHostedEnvironment()) {
+      ws.binaryType = "arraybuffer"; // Sometimes more reliable
+    }
     socketRef.current = ws;
 
     ws.onopen = () => {
       // console.log("Connected to server");
       FrontendLogger.info("Connected to server");
-      reconnectionAttempts.current = 0;
-      setIsConnecting(false);
+      setTimeout(() => {
+        reconnectionAttempts.current = 0;
+        setIsConnecting(false);
 
-      // Check if we need to attempt reconnection
-      const token = localStorage.getItem(RECONNECTION_TOKEN);
-      const expiry = Number(localStorage.getItem(RECONNECTION_TOKEN_EXPIRY));
+        // Check if we need to attempt reconnection
+        const token = localStorage.getItem(RECONNECTION_TOKEN);
+        const expiry = Number(localStorage.getItem(RECONNECTION_TOKEN_EXPIRY));
 
-      // Include a small buffer time for expiry
-      const isValid = token && expiry && expiry > Date.now() - 5000;
+        // Include a small buffer time for expiry
+        const isValid = token && expiry && expiry > Date.now() - 5000;
 
-      // After page reload, always try to reconnect if token exists
-      if (isValid) {
-        // console.log("Valid token found, sending reconnection request");
-        FrontendLogger.info("Valid token found, sending reconnection request");
-        ws.send(
-          JSON.stringify({
-            type: RECONNECT_REQUEST,
-            payload: { token: token },
-          })
-        );
-
-        // Leave UI visible until server confirms or rejects reconnection
-      } else if (token || expiry) {
-        // Only clear invalid tokens after we're connected and not on reload
-        if (!isInitialMount.current) {
-          // console.log("Clearing invalid token after successful connection");
-          FrontendLogger.debug(
-            "Clearing invalid token after successful connection"
+        // After page reload, always try to reconnect if token exists
+        if (isValid) {
+          // console.log("Valid token found, sending reconnection request");
+          FrontendLogger.info(
+            "Valid token found, sending reconnection request"
           );
-          clearReconnectionTokens();
-        }
-      }
+          ws.send(
+            JSON.stringify({
+              type: RECONNECT_REQUEST,
+              payload: { token: token },
+            })
+          );
 
-      setSocket(ws);
+          // Leave UI visible until server confirms or rejects reconnection
+        } else if (token || expiry) {
+          // Only clear invalid tokens after we're connected and not on reload
+          if (!isInitialMount.current) {
+            // console.log("Clearing invalid token after successful connection");
+            FrontendLogger.debug(
+              "Clearing invalid token after successful connection"
+            );
+            clearReconnectionTokens();
+          }
+        }
+
+        setSocket(ws);
+      }, 500);
     };
 
     ws.onmessage = (event: MessageEvent) => {
@@ -379,9 +393,13 @@ export const useSocket = (props: UseSocketProps = {}) => {
       FrontendLogger.error("WebSocket error:", error);
     };
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
       // console.log("Disconnected from server");
-      FrontendLogger.info("Disconnected from server");
+      FrontendLogger.info(
+        `Disconnected from server with code: ${event.code}, reason: ${
+          event.reason || "No reason provided"
+        }`
+      );
       setSocket(null);
       socketRef.current = null;
       setIsConnecting(false);
