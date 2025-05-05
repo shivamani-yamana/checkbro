@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: chess-backend
+    env: node
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        sync: false # Let Render assign the port
+      - key: LOG_LEVEL
+        value: INFO
+    headers:
+      - path: /*
+        name: Access-Control-Allow-Origin
+        value: https://checkbro.vercel.app
