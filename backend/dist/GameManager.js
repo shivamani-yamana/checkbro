@@ -323,18 +323,33 @@ class GameManager {
     }
     // Method to start heartbeat for a client
     startHeartbeat(client) {
-        const sendHeartbeat = () => {
-            if (client.socket.readyState === ws_1.WebSocket.OPEN) {
-                client.socket.send(JSON.stringify({ type: messages_1.PING }));
+        // Add a delay before starting heartbeat to allow connection to stabilize
+        setTimeout(() => {
+            // Only start heartbeat if socket is still open
+            if (client.socket.readyState !== ws_1.WebSocket.OPEN) {
+                Logger.debug(`Not starting heartbeat for client ${client.id} - socket not open anymore`);
+                return;
             }
-        };
-        // Send heartbeat every interval
-        const heartbeatInterval = setInterval(sendHeartbeat, this.HEART_BEAT_INTERVAL);
-        // Clean up on close
-        client.socket.on("close", () => {
-            clearInterval(heartbeatInterval);
-            this.removeUserFromGame(client.socket);
-        });
+            const sendHeartbeat = () => {
+                if (client.socket.readyState === ws_1.WebSocket.OPEN) {
+                    try {
+                        client.socket.send(JSON.stringify({ type: messages_1.PING }));
+                        Logger.debug(`Sent PING heartbeat to client ${client.id}`);
+                    }
+                    catch (error) {
+                        Logger.error("Error sending heartbeat:", error);
+                    }
+                }
+            };
+            // Send heartbeat every interval
+            const heartbeatInterval = setInterval(sendHeartbeat, this.HEART_BEAT_INTERVAL);
+            // Clean up on close
+            client.socket.on("close", () => {
+                clearInterval(heartbeatInterval);
+                Logger.debug(`Heartbeat stopped for client ${client.id} due to connection close`);
+            });
+            Logger.debug(`Started heartbeat for client ${client.id}`);
+        }, 3000); // 3-second delay before starting heartbeat
     }
     // Method to check for stale connections
     checkConnections() {

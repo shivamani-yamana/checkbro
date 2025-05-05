@@ -260,6 +260,7 @@ export const useSocket = (props: UseSocketProps = {}) => {
               clientType: "player",
               timestamp: Date.now(),
               reconnect: reconnectingToken.current ? true : false,
+              token: reconnectingToken.current || undefined,
             },
           })
         );

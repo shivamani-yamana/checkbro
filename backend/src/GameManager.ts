@@ -288,7 +288,7 @@ export class GameManager {
   }
 
   // In the handleReconnectingClient method:
-  private handleReconnectingClient(token: string, newClient: ClientConnection) {
+  public handleReconnectingClient(token: string, newClient: ClientConnection) {
     try {
       const decoded = jwt.verify(token, this.JWT_SECRET || "") as TokenPayload;
       const { clientId, gameId, playerColor, playerName } = decoded;
@@ -453,23 +453,43 @@ export class GameManager {
 
   // Method to start heartbeat for a client
   private startHeartbeat(client: ClientConnection) {
-    const sendHeartbeat = () => {
-      if (client.socket.readyState === WebSocket.OPEN) {
-        client.socket.send(JSON.stringify({ type: PING }));
+    // Add a delay before starting heartbeat to allow connection to stabilize
+    setTimeout(() => {
+      // Only start heartbeat if socket is still open
+      if (client.socket.readyState !== WebSocket.OPEN) {
+        Logger.debug(
+          `Not starting heartbeat for client ${client.id} - socket not open anymore`
+        );
+        return;
       }
-    };
 
-    // Send heartbeat every interval
-    const heartbeatInterval = setInterval(
-      sendHeartbeat,
-      this.HEART_BEAT_INTERVAL
-    );
+      const sendHeartbeat = () => {
+        if (client.socket.readyState === WebSocket.OPEN) {
+          try {
+            client.socket.send(JSON.stringify({ type: PING }));
+            Logger.debug(`Sent PING heartbeat to client ${client.id}`);
+          } catch (error) {
+            Logger.error("Error sending heartbeat:", error);
+          }
+        }
+      };
 
-    // Clean up on close
-    client.socket.on("close", () => {
-      clearInterval(heartbeatInterval);
-      this.removeUserFromGame(client.socket);
-    });
+      // Send heartbeat every interval
+      const heartbeatInterval = setInterval(
+        sendHeartbeat,
+        this.HEART_BEAT_INTERVAL
+      );
+
+      // Clean up on close
+      client.socket.on("close", () => {
+        clearInterval(heartbeatInterval);
+        Logger.debug(
+          `Heartbeat stopped for client ${client.id} due to connection close`
+        );
+      });
+
+      Logger.debug(`Started heartbeat for client ${client.id}`);
+    }, 3000); // 3-second delay before starting heartbeat
   }
 
   // Method to check for stale connections

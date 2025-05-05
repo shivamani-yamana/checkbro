@@ -49,7 +49,11 @@ if (logLevel === "DEBUG") {
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
 
 // Define allowed origins
-const allowedOrigins = ["http://localhost:3000", "https://checkbro.vercel.app"];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://checkbro.vercel.app",
+];
 
 const wss = new WebSocketServer({
   port: PORT,
@@ -78,6 +82,60 @@ wss.on("connection", (ws, req) => {
   // Track connection time for debugging
   const connectionStartTime = Date.now();
 
+  // Handle CLIENT_HELLO message directly to stabilize connection
+  ws.on("message", (data) => {
+    try {
+      const message = JSON.parse(data.toString());
+
+      // Handle CLIENT_HELLO message immediately to stabilize connection
+      if (message.type === "CLIENT_HELLO") {
+        Logger.info(
+          `Received CLIENT_HELLO from ${
+            message.payload?.clientType || "unknown"
+          }`
+        );
+
+        // If this is a reconnection attempt with a token, let game manager handle it first
+        if (message.payload?.reconnect && message.payload?.token) {
+          Logger.info("Client attempting reconnection with token");
+
+          // Create a temporary client to handle reconnection
+          const tempClient = {
+            id: `temp-${Date.now()}`,
+            socket: ws,
+            lastPing: Date.now(),
+            lastTokenIssue: null,
+          };
+
+          // Attempt reconnection with the token
+          gameManager.handleReconnectingClient(
+            message.payload.token,
+            tempClient
+          );
+          return;
+        }
+
+        // For non-reconnection, send immediate response to establish connection
+        ws.send(
+          JSON.stringify({
+            type: "CONNECTION_ESTABLISHED",
+            payload: {
+              clientId: `client-${Date.now()}-${Math.random()
+                .toString(36)
+                .substring(2, 9)}`,
+              serverTime: Date.now(),
+            },
+          })
+        );
+
+        Logger.debug("Sent CONNECTION_ESTABLISHED response");
+      }
+    } catch (error) {
+      Logger.error("Error handling message:", error);
+    }
+  });
+
+  // Add user to game after setting up direct message handling
   gameManager.addUserToGame(ws);
 
   ws.on("close", (code, reason) => {
