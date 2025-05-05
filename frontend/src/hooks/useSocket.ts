@@ -62,9 +62,41 @@ interface UseSocketProps {
   onMessage?: MessageHandler; // Add callback for message handling
 }
 
+// Create a singleton instance ID to track if the hook is reused
+let SINGLETON_INSTANCE_CREATED = false;
+
 export const useSocket = (props: UseSocketProps = {}) => {
   const { setGameState, setReconnecting, onMessage } = props;
+
+  // Add instance tracking to debug multiple hook creations
+  const instanceId = useRef(
+    `socket-instance-${Math.random().toString(36).substring(2, 9)}`
+  );
+
+  // Flag to indicate if this instance has already initialized a socket
   const hasInitialized = useRef(false);
+
+  // Warn about multiple hook instances which can cause connection issues
+  useEffect(() => {
+    if (SINGLETON_INSTANCE_CREATED) {
+      FrontendLogger.error(
+        `Multiple useSocket instances detected. This can cause socket disconnections. Current instance: ${instanceId.current}`
+      );
+    } else {
+      SINGLETON_INSTANCE_CREATED = true;
+      FrontendLogger.debug(`useSocket instance created: ${instanceId.current}`);
+    }
+
+    return () => {
+      if (instanceId.current) {
+        SINGLETON_INSTANCE_CREATED = false;
+        FrontendLogger.debug(
+          `useSocket instance destroyed: ${instanceId.current}`
+        );
+      }
+    };
+  }, []);
+
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
@@ -90,16 +122,16 @@ export const useSocket = (props: UseSocketProps = {}) => {
   );
   // Add a flag to track if reconnection was successful
   const reconnectionSuccessful = useRef(false);
+  // Track connection attempts to avoid race conditions
+  const connectionAttemptId = useRef<string | null>(null);
 
   const clearReconnectionTokens = useCallback(() => {
     // Don't clear tokens on initial page load/reload
     if (isInitialMount.current) {
-      // console.log("Skipping token clearing during initial page load");
       FrontendLogger.debug("Skipping token clearing during initial page load");
       return;
     }
 
-    // console.log("Clearing reconnection tokens");
     FrontendLogger.info("Clearing reconnection tokens");
     localStorage.removeItem(RECONNECTION_TOKEN);
     localStorage.removeItem(RECONNECTION_TOKEN_EXPIRY);
@@ -107,9 +139,6 @@ export const useSocket = (props: UseSocketProps = {}) => {
     reconnectingTokenExpiry.current = null;
     setHasReconnectionToken(false);
     if (setReconnecting) {
-      // console.log(
-      //   "Setting reconnecting state to false in clearReconnectionTokens"
-      // );
       FrontendLogger.debug(
         "Setting reconnecting state to false in clearReconnectionTokens"
       );
@@ -127,11 +156,6 @@ export const useSocket = (props: UseSocketProps = {}) => {
     const isValid = token && expiry && expiry > Date.now() - 2000;
 
     if (isValid) {
-      // console.log(
-      //   `Found reconnection token on page load, expires in ${Math.floor(
-      //     (expiry - Date.now()) / 1000
-      //   )}s`
-      // );
       FrontendLogger.info(
         `Found reconnection token on page load, expires in ${Math.floor(
           (expiry - Date.now()) / 1000
@@ -144,16 +168,12 @@ export const useSocket = (props: UseSocketProps = {}) => {
       setHasReconnectionToken(true);
       // Set reconnecting state to true to show automatic reconnecting UI
       if (setReconnecting) {
-        // console.log(
-        //   "Setting reconnecting state to true on page load with valid token"
-        // );
         FrontendLogger.debug(
           "Setting reconnecting state to true on page load with valid token"
         );
         setReconnecting(true);
       }
     } else if (token || expiry) {
-      // console.log("Found invalid reconnection token on page load");
       FrontendLogger.debug("Found invalid reconnection token on page load");
     }
 
@@ -166,80 +186,90 @@ export const useSocket = (props: UseSocketProps = {}) => {
   }, [setReconnecting]);
 
   const connectWebSocket = useCallback(() => {
+    // Generate a unique ID for this connection attempt
+    const currentConnectionAttemptId = `conn-${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 9)}`;
+    connectionAttemptId.current = currentConnectionAttemptId;
+
+    FrontendLogger.debug(
+      `Starting connection attempt: ${currentConnectionAttemptId}`
+    );
+
     // Verify token expiry but don't clear during connection attempt
     if (reconnectingTokenExpiry.current) {
       const timeLeft = reconnectingTokenExpiry.current - Date.now();
       // Add a small buffer to expire time to handle clock skew/timing issues
       if (timeLeft < -5000) {
         // Only consider it expired if it's more than 5 seconds past
-        // console.log(
-        //   "Token significantly expired, will be cleared after connection attempt"
-        // );
         FrontendLogger.debug(
           "Token significantly expired, will be cleared after connection attempt"
         );
       } else if (timeLeft < 0) {
-        // console.log(
-        //   "Token just expired (within tolerance), still attempting reconnection"
-        // );
         FrontendLogger.debug(
           "Token just expired (within tolerance), still attempting reconnection"
         );
         // Treat as valid for reconnection attempts
       } else {
-        // console.log(
-        //   `Valid token found, expires in ${Math.round(timeLeft / 1000)}s`
-        // );
         FrontendLogger.debug(
           `Valid token found, expires in ${Math.round(timeLeft / 1000)}s`
         );
       }
     } else {
-      // console.log("No reconnection token found");
       FrontendLogger.debug("No reconnection token found");
     }
 
-    setIsConnecting(true);
+    // Only set connecting state if no socket exists
+    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+      setIsConnecting(true);
+    } else {
+      FrontendLogger.debug(
+        "Socket already exists, reusing existing connection"
+      );
+      return;
+    }
+
     const socketUrl = import.meta.env.VITE_WEBSOCKET_URL;
     const ws = new WebSocket(socketUrl);
+
+    // Track when socket was created to debug connection timing issues
+    const connectionStartTime = Date.now();
+
+    // Store socket reference for cleanup
     socketRef.current = ws;
 
     ws.onopen = () => {
-      // console.log("Connected to server");
-      FrontendLogger.info("Connected to server");
+      // Verify this is still the active connection attempt
+      if (connectionAttemptId.current !== currentConnectionAttemptId) {
+        FrontendLogger.debug(
+          `Ignoring outdated connection attempt: ${currentConnectionAttemptId}`
+        );
+        ws.close();
+        return;
+      }
+
+      const connectionTime = Date.now() - connectionStartTime;
+      FrontendLogger.info(`Connected to server (took ${connectionTime}ms)`);
+
+      // Send a hello message immediately to establish identity
+      try {
+        ws.send(
+          JSON.stringify({
+            type: "CLIENT_HELLO",
+            payload: {
+              clientType: "player",
+              timestamp: Date.now(),
+              reconnect: reconnectingToken.current ? true : false,
+            },
+          })
+        );
+        FrontendLogger.debug("Sent initial CLIENT_HELLO message");
+      } catch (err) {
+        FrontendLogger.error("Failed to send initial hello message", err);
+      }
+
       reconnectionAttempts.current = 0;
       setIsConnecting(false);
-
-      // Check if we need to attempt reconnection
-      // const token = localStorage.getItem(RECONNECTION_TOKEN);
-      // const expiry = Number(localStorage.getItem(RECONNECTION_TOKEN_EXPIRY));
-
-      // Include a small buffer time for expiry
-      // const isValid = token && expiry && expiry > Date.now() - 5000;
-
-      // // After page reload, always try to reconnect if token exists
-      // if (isValid) {
-      //   // console.log("Valid token found, sending reconnection request");
-      //   FrontendLogger.info("Valid token found, sending reconnection request");
-      //   ws.send(
-      //     JSON.stringify({
-      //       type: RECONNECT_REQUEST,
-      //       payload: { token: token },
-      //     })
-      //   );
-
-      //   // Leave UI visible until server confirms or rejects reconnection
-      // } else if (token || expiry) {
-      //   // Only clear invalid tokens after we're connected and not on reload
-      //   if (!isInitialMount.current) {
-      //     // console.log("Clearing invalid token after successful connection");
-      //     FrontendLogger.debug(
-      //       "Clearing invalid token after successful connection"
-      //     );
-      //     clearReconnectionTokens();
-      //   }
-      // }
-
       setSocket(ws);
     };
 
@@ -255,14 +285,12 @@ export const useSocket = (props: UseSocketProps = {}) => {
         // Handle connection-specific messages
         if (data.type === CONNECTION_ESTABLISHED) {
           setClientId(data.payload.clientId);
-          // console.log("Received client ID:", data.payload.clientId);
           FrontendLogger.info("Received client ID:", data.payload.clientId);
         }
 
         if (data.type === RECONNECTION_TOKEN) {
           const { token, expiresIn } = data.payload;
           if (!token || !expiresIn) {
-            // console.error("Invalid reconnection token data", data.payload);
             FrontendLogger.error(
               "Invalid reconnection token data",
               data.payload
@@ -271,7 +299,6 @@ export const useSocket = (props: UseSocketProps = {}) => {
           }
 
           const expiry = Date.now() + expiresIn * 1000;
-          // console.log(`Received reconnection token, expires in ${expiresIn}s`);
           FrontendLogger.debug(
             `Received reconnection token, expires in ${expiresIn}s`
           );
@@ -283,13 +310,11 @@ export const useSocket = (props: UseSocketProps = {}) => {
 
         // Handle reconnection responses
         if (data.type === RECONNECTION_SUCCESSFUL) {
-          // console.log("Reconnection successful, clearing reconnection UI");
           FrontendLogger.info(
             "Reconnection successful, clearing reconnection UI"
           );
           reconnectionSuccessful.current = true;
 
-          // console.log(data.payload.gameState);
           FrontendLogger.debug("Game state:", data.payload.gameState);
 
           // Important: Set game state first before clearing tokens
@@ -297,14 +322,10 @@ export const useSocket = (props: UseSocketProps = {}) => {
 
           // Use a short delay to ensure the game state is fully updated before removing UI
           setTimeout(() => {
-            // console.log("Delayed token clearing after successful reconnection");
             FrontendLogger.debug(
               "Delayed token clearing after successful reconnection"
             );
             if (setReconnecting) {
-              // console.log(
-              //   "Setting reconnecting state to false after successful reconnection"
-              // );
               FrontendLogger.debug(
                 "Setting reconnecting state to false after successful reconnection"
               );
@@ -314,9 +335,6 @@ export const useSocket = (props: UseSocketProps = {}) => {
             if (!isInitialMount.current) {
               clearReconnectionTokens();
             } else {
-              // console.log(
-              //   "In initial mount, skipping token clearing but updating UI"
-              // );
               FrontendLogger.debug(
                 "In initial mount, skipping token clearing but updating UI"
               );
@@ -326,10 +344,6 @@ export const useSocket = (props: UseSocketProps = {}) => {
             }
           }, 500);
         } else if (data.type === RECONNECTION_FAILED) {
-          // console.log(
-          //   "Reconnection failed:",
-          //   data.payload?.reason || "Unknown reason"
-          // );
           FrontendLogger.error(
             "Reconnection failed:",
             data.payload?.reason || "Unknown reason"
@@ -339,14 +353,10 @@ export const useSocket = (props: UseSocketProps = {}) => {
           // Don't immediately clear token during initial mount to avoid race conditions
           setTimeout(() => {
             if (!isInitialMount.current) {
-              // console.log("Clearing reconnection UI after failed reconnection");
               FrontendLogger.debug(
                 "Clearing reconnection UI after failed reconnection"
               );
               if (setReconnecting) {
-                // console.log(
-                //   "Setting reconnecting state to false after failed reconnection"
-                // );
                 FrontendLogger.debug(
                   "Setting reconnecting state to false after failed reconnection"
                 );
@@ -354,9 +364,6 @@ export const useSocket = (props: UseSocketProps = {}) => {
               }
               clearReconnectionTokens();
             } else {
-              // console.log(
-              //   "Still in initial mount, not clearing reconnection UI yet"
-              // );
               FrontendLogger.debug(
                 "Still in initial mount, not clearing reconnection UI yet"
               );
@@ -365,26 +372,34 @@ export const useSocket = (props: UseSocketProps = {}) => {
         }
 
         if (data.type === PING) {
+          FrontendLogger.debug("Received PING, sending PONG");
           ws.send(JSON.stringify({ type: PONG }));
         }
       } catch (e) {
-        // console.error("Error parsing message", e);
         FrontendLogger.error("Error parsing message", e);
       }
     };
 
     ws.onerror = (error) => {
-      // console.error("WebSocket error:", error);
       FrontendLogger.error("WebSocket error:", error);
     };
 
     ws.onclose = (event) => {
-      // console.log("Disconnected from server");
+      const connectionDuration = Date.now() - connectionStartTime;
       FrontendLogger.info(
-        `Disconnected from server with code: ${event.code}, reason: ${
-          event.reason || "No reason provided"
-        }`
+        `Disconnected from server after ${connectionDuration}ms with code: ${
+          event.code
+        }, reason: ${event.reason || "No reason provided"}`
       );
+
+      // Verify this matches the current connection attempt
+      if (connectionAttemptId.current !== currentConnectionAttemptId) {
+        FrontendLogger.debug(
+          `Ignoring close event for outdated connection: ${currentConnectionAttemptId}`
+        );
+        return;
+      }
+
       setSocket(null);
       socketRef.current = null;
       setIsConnecting(false);
@@ -404,9 +419,6 @@ export const useSocket = (props: UseSocketProps = {}) => {
       if (isValid) {
         // If this is during a page reload or tab switch, preserve the token
         if (isPageHidden || isRecentlyLoaded || isInitialMount.current) {
-          // console.log(
-          //   "Page reload/hidden detected, preserving reconnection token"
-          // );
           FrontendLogger.debug(
             "Page reload/hidden detected, preserving reconnection token"
           );
@@ -421,24 +433,25 @@ export const useSocket = (props: UseSocketProps = {}) => {
 
         // Attempt automatic reconnection for normal disconnections
         if (reconnectionAttempts.current >= 10) {
-          // console.warn("Max reconnection attempts reached. Giving up.");
           FrontendLogger.error("Max reconnection attempts reached. Giving up.");
           return;
         }
 
         reconnectionAttempts.current++;
         const delay = Math.min(10000, 500 * 2 ** reconnectionAttempts.current);
-        // console.log(
-        //   `Attempting reconnection in ${delay}ms (attempt #${reconnectionAttempts.current})`
-        // );
         FrontendLogger.info(
           `Attempting reconnection in ${delay}ms (attempt #${reconnectionAttempts.current})`
         );
-        setTimeout(connectWebSocket, delay);
+
+        setTimeout(() => {
+          // Only attempt reconnection if we're still the active instance
+          if (SINGLETON_INSTANCE_CREATED && instanceId.current) {
+            connectWebSocket();
+          }
+        }, delay);
       } else if (token || expiry) {
         // Don't clear invalid tokens during initial page load
         if (!isInitialMount.current) {
-          // console.log("Invalid token detected during disconnect, clearing");
           FrontendLogger.debug(
             "Invalid token detected during disconnect, clearing"
           );
@@ -446,12 +459,11 @@ export const useSocket = (props: UseSocketProps = {}) => {
         }
       }
     };
-  }, [clearReconnectionTokens, hasReconnectionToken, onMessage, setGameState]);
+  }, [clearReconnectionTokens, setGameState, onMessage]);
 
   // Manual reconnection function (called from UI)
   const reconnect = useCallback(() => {
     if (!isConnecting && !socket) {
-      // console.log("Manual reconnection initiated");
       FrontendLogger.info("Manual reconnection initiated");
       // Show reconnecting UI when manual reconnection is triggered
       if (setReconnecting) {
@@ -462,17 +474,21 @@ export const useSocket = (props: UseSocketProps = {}) => {
     }
   }, [connectWebSocket, isConnecting, socket, setReconnecting]);
 
-  // Initialize connection on component mount
+  // Initialize connection on component mount - ONLY ONCE
   useEffect(() => {
+    FrontendLogger.debug(
+      `Socket initialization effect running (${instanceId.current})`
+    );
+
     if (!hasInitialized.current) {
       hasInitialized.current = true;
+      FrontendLogger.debug("First initialization, connecting WebSocket");
       connectWebSocket();
     }
 
     // Add visibility change listener for tab switching
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        // console.log("Tab became visible, checking connection status");
         FrontendLogger.debug("Tab became visible, checking connection status");
 
         // Wait a short moment to see if WebSocket recovers automatically
@@ -493,18 +509,12 @@ export const useSocket = (props: UseSocketProps = {}) => {
               const isValid = token && expiry && expiry > Date.now();
 
               if (isValid) {
-                // console.log(
-                //   "Socket disconnected after tab switch, showing reconnect UI"
-                // );
                 FrontendLogger.info(
                   "Socket disconnected after tab switch, showing reconnect UI"
                 );
                 setHasReconnectionToken(true);
               }
             } else {
-              // console.log(
-              //   "Socket is connected after tab switch, no need for reconnection UI"
-              // );
               FrontendLogger.debug(
                 "Socket is connected after tab switch, no need for reconnection UI"
               );
@@ -517,8 +527,9 @@ export const useSocket = (props: UseSocketProps = {}) => {
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      // console.log("Cleaning up socket connection");
-      FrontendLogger.debug("Cleaning up socket connection");
+      FrontendLogger.debug(
+        `Cleaning up socket instance (${instanceId.current})`
+      );
       document.removeEventListener("visibilitychange", handleVisibilityChange);
 
       if (
@@ -529,7 +540,7 @@ export const useSocket = (props: UseSocketProps = {}) => {
       }
       socketRef.current = null;
     };
-  }, [connectWebSocket, socket, hasReconnectionToken]);
+  }, []);
 
   // Handle page unload
   useEffect(() => {
@@ -563,9 +574,6 @@ export const useSocket = (props: UseSocketProps = {}) => {
         );
         return true;
       }
-      // console.error(
-      //   `Cannot send message ${messageType}, socket is not connected`
-      // );
       FrontendLogger.error(
         `Cannot send message ${messageType}, socket is not connected`
       );
@@ -580,7 +588,7 @@ export const useSocket = (props: UseSocketProps = {}) => {
     reconnect,
     clientId,
     hasReconnectionToken,
-    sendMessage, // Add helper method
+    sendMessage,
     isReconnected: reconnectionSuccessful.current,
   };
 };
